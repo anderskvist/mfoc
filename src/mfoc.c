@@ -326,7 +326,10 @@ int main(int argc, char *const argv[])
   n = sizeof(defaultKeys) / sizeof(defaultKeys[0]);
   size_t defKey_bytes_todo = defKeys_len;
   key = 0;
+  long long int known_keys[1024];
+  long unsigned int num_key = 0;
   while (key < n || defKey_bytes_todo) {
+    skip = false;
     if (defKey_bytes_todo > 0) {
       memcpy(mp.mpa.abtKey, defKeys + defKeys_len - defKey_bytes_todo, sizeof(mp.mpa.abtKey));
       defKey_bytes_todo -= sizeof(mp.mpa.abtKey);
@@ -334,6 +337,19 @@ int main(int argc, char *const argv[])
       memcpy(mp.mpa.abtKey, defaultKeys[key], sizeof(mp.mpa.abtKey));
       key++;
     }
+    // Skip key if we already tried it
+    for (i = 0; i < num_key; i++) {
+      if (known_keys[i] == bytes_to_num(mp.mpa.abtKey, 6)) {
+	skip = true;
+	break;
+      }
+    }
+    if (skip == true) {
+      continue;
+    }
+    known_keys[num_key] = bytes_to_num(mp.mpa.abtKey, 6);
+    num_key = (defKeys_len-defKey_bytes_todo)/sizeof(mp.mpa.abtKey);
+
     fprintf(stdout, "[Key: %012llx] -> ", bytes_to_num(mp.mpa.abtKey, 6));
     fprintf(stdout, "[");
     i = 0; // Sector counter
